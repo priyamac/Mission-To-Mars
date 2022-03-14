@@ -1,9 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[21]:
-
-
 # Import Splinter and BeautifulSoup
 from splinter import Browser
 from bs4 import BeautifulSoup as soup
@@ -12,21 +6,25 @@ import pandas as pd
 import datetime as dt
 
 
-# In[2]:
 
 def scrape_all():
     # Initiate headless driver for deployment
     executable_path = {'executable_path': ChromeDriverManager().install()}
     browser = Browser('chrome', **executable_path, headless=False)
+    browser = Browser("chrome", executable_path="chromedriver", headless=True)
 
     news_title, news_paragraph = mars_news(browser)
 
+    # New Dictionary for list of dictionaries
+    #######news_title, news_paragraph= mars_news(browser)
+    #######hemisphere_image_urls=hemisphere(browser)
     # Run all scraping functions and store results in dictionary
     data = {
         "news_title": news_title,
         "news_paragraph": news_paragraph,
         "featured_image": featured_image(browser),
         "facts": mars_facts(),
+        "hemispheres": hemisphere(browser),
         "last_modified": dt.datetime.now()
     }
 
@@ -34,7 +32,6 @@ def scrape_all():
     browser.quit()
     return data
 
-# In[3]:
 
 #Def Function
 def mars_news(browser):
@@ -68,7 +65,6 @@ def mars_news(browser):
 
 # ## Featured Images
 
-# In[14]:
 
 def featured_image(browser):
     # Visit URL
@@ -98,7 +94,6 @@ def featured_image(browser):
 
 # ### Mars Facts
 
-# In[22]:
 
 def mars_facts():
     try:
@@ -114,11 +109,40 @@ def mars_facts():
     # Convert dataframe into HTML format, add bootstrap
     return df.to_html()
 
+### Hemisphere 
+
+def hemisphere(browser):
+    url='https://marshemispheres.com/'
+    browser.visit(url)
+
+
+    hemisphere_image_urls = []
+
+    imgs_links= browser.find_by_css("a.product-item h3")
+
+    for i in range(4):
+        hemispheres = {}
+        browser.find_by_css('a.product-item h3')[i].click()
+        element = browser.find_link_by_text('Sample').first
+        img_url = element['href']
+        title = browser.find_by_css("h2.title").text
+        hemispheres["img_url"] = img_url
+        hemispheres["title"] = title
+        hemisphere_image_urls.append(hemispheres)
+        browser.back()
+
+        # Go Back
+        browser.back()
+    return hemisphere_image_urls
+
 
 # In[ ]:
 if __name__ == "__main__":
     # If running as script, print scraped data
     print(scrape_all())
+    
+
+
 
 
 
